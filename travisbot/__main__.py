@@ -1,13 +1,13 @@
 """Main program."""
 
 import asyncio
-import json
 
 import aiohttp
 
 
 URL = "https://discordapp.com/api"
 """Discord HTTP API endpoint."""
+
 
 async def api_call(path):
     """Return the JSON body of a call to Discord REST API."""
@@ -16,8 +16,9 @@ async def api_call(path):
             assert 200 == response.status, response.reason
             return await response.json()
 
+
 async def main():
-    """Main program."""
+    """Run main program."""
     response = await api_call("/gateway")
     print(response)
 

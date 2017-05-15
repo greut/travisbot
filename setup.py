@@ -31,7 +31,7 @@ setup(
     install_requires=(
         'aiohttp>=2.0.0'
     ),
-    extras_requires={
+    extras_require={
         'fast': ('cchardet', 'aiodns'),  # making it faster (recommended)
         'qa': ('flake8', 'isort', 'pycodestyle', 'pydocstyle', 'rstcheck'),
     }
