@@ -5,6 +5,12 @@
 .. image:: https://travis-ci.org/greut/travisbot.svg?branch=master
    :target: https://travis-ci.org/greut/travisbot
 
+.. image:: https://img.shields.io/pypi/dd/discord-travisbot.svg
+   :target: https://pypi.python.org/pypi/discord-travisbot
+
+.. image:: https://img.shields.io/github/stars/greut/travisbot.svg
+   :target: https://github.com/greut/travisbot/stargazers
+
 A bot for Discord. (Work in progress)
 
 Development
