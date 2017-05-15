@@ -27,3 +27,14 @@ Running
 .. code-block:: console
 
     (travisbot)$ python -m travisbot
+
+Release
+=======
+
+Update the version number and clean up the ``dist`` directory before-hand.
+
+.. code-block:: console
+
+    (travisbot)$ pip install wheel twine
+    (travisbot)$ python setup.py bdist_wheel
+    (travisbot)$ twine -r dist/*

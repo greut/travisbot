@@ -1,5 +1,6 @@
 # venv
 bin
+dist
 lib
 lib64
 pyvenv.cfg
