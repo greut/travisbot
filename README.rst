@@ -2,6 +2,9 @@
  Travis Bot
 ============
 
+.. image:: https://travis-ci.org/greut/travisbot.svg?branch=master
+   :target: https://travis-ci.org/greut/travisbot
+
 A bot for Discord. (Work in progress)
 
 Development
