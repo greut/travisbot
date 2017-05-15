@@ -4,5 +4,13 @@ lib
 lib64
 pyvenv.cfg
 src
+
+# python
+__pycache__
+
+# pip
+pip-selfcheck.json
+discord_travisbot.egg-info
+
 # tox
 .tox
