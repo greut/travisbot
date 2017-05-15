@@ -41,6 +41,7 @@ Update the version number and clean up the ``dist`` directory before-hand.
 
 .. code-block:: console
 
+    (travisbot)$ python setup.py register -r https://pypi.python.org/pypi
     (travisbot)$ pip install wheel twine
     (travisbot)$ python setup.py bdist_wheel
-    (travisbot)$ twine -r dist/*
+    (travisbot)$ twine upload dist/*
