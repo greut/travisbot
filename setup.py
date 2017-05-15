@@ -33,5 +33,6 @@ setup(
     ),
     extras_requires={
         'fast': ('cchardet', 'aiodns'),  # making it faster (recommended)
+        'qa': ('flake8', 'isort', 'pycodestyle', 'pydocstyle', 'rstcheck'),
     }
 )

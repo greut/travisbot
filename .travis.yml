@@ -1,0 +1,13 @@
+language: python
+
+python:
+  - "3.6"
+
+install:
+  - pip install -e .[fast,qa]
+
+script:
+  - pycodestyle
+  - pydocstyle
+  - isort --check-only --diff --recursive
+  - find . -iname "*.rst" | rstcheck --report 2
