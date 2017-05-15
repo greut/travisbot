@@ -11,4 +11,4 @@ script:
   - pydocstyle travisbot
   - isort --check-only --diff --recursive travisbot
   - flake8 travisbot
-  - find . -iname "*.rst" | rstcheck --report 2
+  - find . -iname "*.rst" | xargs rstcheck --report 2
