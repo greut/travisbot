@@ -18,6 +18,12 @@ Development
 
 To setup and run the basic steps of the bot.
 
+Requirements
+------------
+
+- `Python 3.6 <https://www.python.org/>`_
+- `ngrok <https://ngrok.com/>`_
+
 Installation
 ------------
 
@@ -36,6 +42,16 @@ The secret token is read from the environment variables.
 
     (travisbot)$ export TOKEN=...
     (travisbot)$ python -m travisbot
+
+In a separate process, run ``ngrok``.
+
+.. code-block:: console
+
+    $ ngrok http 8888
+
+Then, configure the notifications of your project to point to the given URL:
+`Configuring webhook notifications <https://docs.travis-ci.com/user/notifications/#Configuring-webhook-notifications>`_
+
 
 Release
 =======
