@@ -11,7 +11,7 @@ with open(path.join(here, 'README.rst'), 'r', encoding='utf-8') as f:
 
 setup(
     name='discord-travisbot',
-    version='0.0.1.dev20170515',  # see PEP-0440
+    version='0.0.1.dev20170516',  # see PEP-0440
     author='Yoan Blanc',
     author_email='yoan@dosimple.ch',
     homepage='https://github.com/greut/travisbot',
@@ -29,7 +29,8 @@ setup(
         'Programming Language :: Python :: 3.6',
     ),
     install_requires=(
-        'aiohttp>=2.0.0'
+        'aiohttp>=2.0.0',
+        'PyOpenSSL>=17.0.0'
     ),
     extras_require={
         'fast': ('cchardet', 'aiodns'),  # making it faster (recommended)

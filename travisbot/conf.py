@@ -8,3 +8,6 @@ PORT = 8888
 
 URL = "https://discordapp.com/api"
 """Discord HTTP API endpoint."""
+
+TRAVIS_CONFIG_URL = "https://api.travis-ci.org/config"
+"""Travis configuration URL containing the webhook public key."""
