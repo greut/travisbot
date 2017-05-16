@@ -16,7 +16,8 @@ async def notifications(request):
     try:
         body = await request.post()
         data = json.loads(body['payload'])
-        await request.app['config']['queue'].put(data)
+        # enqueue the payload
+        await request.app['config']['put'](data)
         ok = True
     except KeyError:
         print("no payload?")
@@ -25,14 +26,25 @@ async def notifications(request):
     return web.json_response({'ok': ok})
 
 
-def make_app(token, queue):
+async def fake(request):
+    """Submit a fake notification."""
+    await request.app['config']['put']({
+        'status_message': 'test',
+        'repository': {
+            'name': 'travisbot'
+        }
+    })
+    return web.json_response({'ok': True})
+
+
+def make_app(put):
     """Make the web application for you."""
     app = web.Application()
     app['config'] = {
-        'token': token,
-        'queue': queue
+        'put': put
     }
 
+    app.router.add_get('/notifications', fake)
     app.router.add_post('/notifications', notifications)
 
     return app

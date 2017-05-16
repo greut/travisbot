@@ -6,6 +6,8 @@ import zlib
 
 from aiohttp import ClientSession, WSMsgType
 
+from . import api
+
 
 DISPATCH = 0
 HEARTBEAT = 1
@@ -16,6 +18,8 @@ HEARTBEAT_ACK = 11
 
 last_sequence = None
 """Global variable holding the sequence number of messages."""
+token = None
+"""Global variable holding the token... (very ugly)."""  # XXX
 
 
 async def heartbeat(ws, interval, fut):
@@ -30,17 +34,28 @@ async def heartbeat(ws, interval, fut):
         await asyncio.sleep(interval)
 
 
-async def consume(ws, queue, fut):
+async def consume(ws, get, fut):
     """Consume the queue and post messages in Discord."""
     while not fut.done():
-        data = await queue.get()
-        print(f"{data['repository']['name']}: {data['status_message']}!")
-        # XXX post the message in the #bots channel.
+        data = await get()
+        msg = f"{data['repository']['name']}: {data['status_message']}!"
+        # XXX this is quite hard coded.
+        print(msg)
+        asyncio.ensure_future(send_message(309734242085109760, msg))
 
 
-async def bot(url, token, queue):
+async def send_message(channel, content):
+    """Send a message into the given channel."""
+    return await api(f"/channels/{channel}/messages", "POST",
+                     token=token,
+                     json={"content": content})
+
+
+async def bot(url, _token, get):
     """Start the bot."""
-    global last_sequence
+    global last_sequence, token
+
+    token = _token
 
     running = asyncio.Future()
 
@@ -69,7 +84,7 @@ async def bot(url, token, queue):
                     interval = data['d']['heartbeat_interval']
                     asyncio.ensure_future(heartbeat(ws, interval, running))
                     # Consumer
-                    asyncio.ensure_future(consume(ws, queue, running))
+                    asyncio.ensure_future(consume(ws, get, running))
 
                 elif data["op"] == HEARTBEAT_ACK:
                     pass

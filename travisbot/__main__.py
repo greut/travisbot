@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     queue = asyncio.Queue()
 
-    app = make_app(token, queue)
+    app = make_app(queue.put)
 
     loop = asyncio.get_event_loop()
     handler = app.make_handler(loop=loop)
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     try:
         srv = loop.run_until_complete(server)
         print(f"Listening on {HOST}:{PORT}... Ctrl-C to close.")
-        loop.run_until_complete(main(token, queue))
+        loop.run_until_complete(main(token, queue.get))
     except KeyboardInterrupt:
         pass
 
