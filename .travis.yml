@@ -4,11 +4,7 @@ python:
   - "3.6"
 
 install:
-  - pip install -e .[fast,qa]
+  - pip install tox tox-travis
 
 script:
-  - pycodestyle travisbot
-  - pydocstyle travisbot
-  - isort --check-only --diff --recursive travisbot
-  - flake8 travisbot
-  - find . -iname "*.rst" | xargs rstcheck --report 2
+  - tox
