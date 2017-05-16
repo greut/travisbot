@@ -30,8 +30,11 @@ Installation
 Running
 -------
 
+The secret token is read from the environment variables.
+
 .. code-block:: console
 
+    (travisbot)$ export TOKEN=...
     (travisbot)$ python -m travisbot
 
 Release
@@ -45,3 +48,10 @@ Update the version number and clean up the ``dist`` directory before-hand.
     (travisbot)$ pip install wheel twine
     (travisbot)$ python setup.py bdist_wheel
     (travisbot)$ twine upload dist/*
+
+Bibliography
+============
+
+- `A Discord bot with asyncio <https://tutorials.botsfloor.com/a-discord-bot-with-asyncio-359a2c99e256>`_
+- `Discord API Reference <https://discordapp.com/developers/docs/reference>`_
+- `discord.py <https://github.com/Rapptz/discord.py>`_

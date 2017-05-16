@@ -1,29 +1,27 @@
 """Main program."""
 
 import asyncio
+import os
+import sys
 
-import aiohttp
-
-
-URL = "https://discordapp.com/api"
-"""Discord HTTP API endpoint."""
+from . import api, bot
 
 
-async def api_call(path):
-    """Return the JSON body of a call to Discord REST API."""
-    with aiohttp.ClientSession() as session:
-        async with session.get(f"{URL}{path}") as response:
-            assert 200 == response.status, response.reason
-            return await response.json()
-
-
-async def main():
+async def main(token):
     """Run main program."""
-    response = await api_call("/gateway")
-    print(response)
+    response = await api("/gateway")
+    await bot(response['url'], token)
 
 
 if __name__ == "__main__":
+    token = os.environ.get('TOKEN')
+    if not token:
+        print("Please put the TOKEN in the env variables.", file=sys.stderr)
+        sys.exit(1)
+
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    try:
+        loop.run_until_complete(main(token))
+    except KeyboardInterrupt:
+        pass
     loop.close()
