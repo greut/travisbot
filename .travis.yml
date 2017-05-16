@@ -11,8 +11,8 @@ install:
 script:
   - tox
 
-notifications:
-  webhooks:
-    urls:
-      - https://961ca815.ngrok.io/notifications
-    on_start: always
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://961ca815.ngrok.io/notifications
+#    on_start: always
