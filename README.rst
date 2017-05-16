@@ -65,6 +65,12 @@ Update the version number and clean up the ``dist`` directory before-hand.
     (travisbot)$ python setup.py bdist_wheel
     (travisbot)$ twine upload dist/*
 
+Travis
+------
+
+Travis CI should handle the release process for us.
+
+
 Bibliography
 ============
 
