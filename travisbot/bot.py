@@ -8,6 +8,7 @@ from aiohttp import ClientSession, WSMsgType
 
 from . import api
 
+API_VERSION = 6
 
 DISPATCH = 0
 HEARTBEAT = 1
@@ -60,7 +61,7 @@ async def bot(url, _token, get):
     running = asyncio.Future()
 
     with ClientSession() as session:
-        async with session.ws_connect(f"{url}?v=5&encoding=json") as ws:
+        async with session.ws_connect(f"{url}?v={API_VERSION}&encoding=json") as ws:
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
                     data = json.loads(msg.data)
@@ -90,7 +91,9 @@ async def bot(url, _token, get):
                     pass
 
                 elif data["op"] == DISPATCH:
-                    print(data['t'], data['d'])
+                    print(data['t'])
+                    print(data['d'])
+                    print('-' * 40)
                     last_sequence = data['s']
 
                 else:

@@ -11,10 +11,10 @@ with open(path.join(here, 'README.rst'), 'r', encoding='utf-8') as f:
 
 setup(
     name='discord-travisbot',
-    version='0.0.1.dev20170516',  # see PEP-0440
+    version='0.0.1.dev20170517',  # see PEP-0440
     author='Yoan Blanc',
     author_email='yoan@dosimple.ch',
-    homepage='https://github.com/greut/travisbot',
+    url='https://github.com/greut/travisbot',
     license='https://opensource.org/licenses/BSD-3-Clause',
     description=__doc__,
     long_description=long_description,
@@ -24,9 +24,13 @@ setup(
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Education',
-        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Topic :: System :: Monitoring'
     ),
     install_requires=(
         'aiohttp>=2.0.0',
