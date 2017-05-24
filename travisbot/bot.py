@@ -61,7 +61,8 @@ async def bot(url, _token, get):
     running = asyncio.Future()
 
     with ClientSession() as session:
-        async with session.ws_connect(f"{url}?v={API_VERSION}&encoding=json") as ws:
+        url = f"{url}?v={API_VERSION}&encoding=json"
+        async with session.ws_connect(url) as ws:
             async for msg in ws:
                 if msg.type == WSMsgType.TEXT:
                     data = json.loads(msg.data)
