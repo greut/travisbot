@@ -17,87 +17,118 @@ HELLO = 10
 HEARTBEAT_ACK = 11
 
 
-last_sequence = None
-"""Global variable holding the sequence number of messages."""
-token = None
-"""Global variable holding the token... (very ugly)."""  # XXX
+class Bot:
+    """The bot."""
 
+    def __init__(self, url, token, get):
+        """Init the bot.
 
-async def heartbeat(ws, interval, fut):
-    """Send beats regularly to keep the ws connected."""
-    interval /= 1000  # seconds
-    await asyncio.sleep(interval)
-    while not fut.done():
-        await ws.send_json({
-            "op": HEARTBEAT,
-            "d": last_sequence
+        :param url: The Gateway URL (WebSocket)
+        :param token: The Discord API token
+        :param get: The Queue reader side.
+        """
+        self.url = url
+
+        self.last_sequence = None
+        """The sequence number of messages."""
+
+        self.token = token
+        """The authentication token from Discord."""
+
+        self.ws = None
+        """WebSocket connection."""
+
+        self.interval = None
+        """Heartbeat interval, in seconds."""
+
+        self.get = get
+        """Reading endpoint of the queue."""
+
+    async def identify(self):
+        """Send the identify message performing the authentication."""
+        await self.ws.send_json({
+            "op": IDENTIFY,
+            "d": {
+                "token": self.token,
+                "properties": {},
+                "compress": True,
+                "large_threshold": 250
+            }
         })
-        await asyncio.sleep(interval)
 
+    async def heartbeat(self, fut):
+        """Send beats regularly to keep the ws connected."""
+        await asyncio.sleep(self.interval)
+        while not fut.done():
+            print("heartbeat", self.last_sequence)
+            await self.ws.send_json({
+                "op": HEARTBEAT,
+                "d": self.last_sequence
+            })
+            await asyncio.sleep(self.interval)
 
-async def consume(ws, get, fut):
-    """Consume the queue and post messages in Discord."""
-    while not fut.done():
-        data = await get()
-        msg = f"{data['repository']['name']}: {data['status_message']}!"
-        # XXX this is quite hard coded.
-        print(msg)
-        asyncio.ensure_future(send_message(309734242085109760, msg))
+    async def consume(self, fut):
+        """Consume the queue and post messages in Discord."""
+        while not fut.done():
+            data = await self.get()
+            msg = f"{data['repository']['name']}: {data['status_message']}!"
+            # XXX this is quite hard coded.
+            print(msg)
+            asyncio.ensure_future(self.send_message(309734242085109760, msg))
 
+    async def send_message(self, channel, content):
+        """Send a message into the given channel."""
+        return await api(f"/channels/{channel}/messages", "POST",
+                         token=self.token,
+                         json={"content": content})
 
-async def send_message(channel, content):
-    """Send a message into the given channel."""
-    return await api(f"/channels/{channel}/messages", "POST",
-                     token=token,
-                     json={"content": content})
+    async def run(self):
+        """Run the bot."""
+        running = asyncio.Future()  # XXX a bit ugly, still. Gather?
 
+        with ClientSession() as session:
+            url = f"{self.url}?v={API_VERSION}&encoding=json"
+            async with session.ws_connect(url) as ws:
+                self.ws = ws
+                while not running.done():
+                    # Reading the message, easier to handle timeouts and such.
+                    msg = await ws.receive()
+                    if msg.type == WSMsgType.TEXT:
+                        data = json.loads(msg.data)
+                    elif msg.type == WSMsgType.BINARY:
+                        data = json.loads(zlib.decompress(msg.data))
+                    elif msg.type == WSMsgType.CLOSE:
+                        print("Close", msg.data, msg.extra)
+                        running.cancel()
+                        break
+                    elif msg.type == WSMsgType.ERROR:
+                        print("Error?")
+                        running.cancel()
+                        break
+                    else:
+                        print("unknown type", msg.type)
 
-async def bot(url, _token, get):
-    """Start the bot."""
-    global last_sequence, token
+                    if data["op"] == HELLO:
+                        await self.identify()
 
-    token = _token
+                        # Heartbeat (converted in seconds)
+                        self.interval = data['d']['heartbeat_interval'] / 1000
+                        asyncio.ensure_future(self.heartbeat(running))
+                        # Consumer
+                        asyncio.ensure_future(self.consume(running))
 
-    running = asyncio.Future()
+                    elif data["op"] == HEARTBEAT_ACK:
+                        pass
 
-    with ClientSession() as session:
-        url = f"{url}?v={API_VERSION}&encoding=json"
-        async with session.ws_connect(url) as ws:
-            async for msg in ws:
-                if msg.type == WSMsgType.TEXT:
-                    data = json.loads(msg.data)
-                elif msg.type == WSMsgType.BINARY:
-                    data = json.loads(zlib.decompress(msg.data))
-                else:
-                    print("unknown type", msg.type)
+                    elif data["op"] == DISPATCH:
+                        self.last_sequence = data['s']
+                        # Debug
+                        print(data['t'])
+                        print(data['d'])
+                        print('-' * 40)
 
-                if data["op"] == HELLO:
-                    await ws.send_json({
-                        "op": IDENTIFY,
-                        "d": {
-                            "token": token,
-                            "properties": {},
-                            "compress": True,
-                            "large_threshold": 250
-                        }
-                    })
+                    else:
+                        print(data)
 
-                    # Heartbeat
-                    interval = data['d']['heartbeat_interval']
-                    asyncio.ensure_future(heartbeat(ws, interval, running))
-                    # Consumer
-                    asyncio.ensure_future(consume(ws, get, running))
-
-                elif data["op"] == HEARTBEAT_ACK:
-                    pass
-
-                elif data["op"] == DISPATCH:
-                    print(data['t'])
-                    print(data['d'])
-                    print('-' * 40)
-                    last_sequence = data['s']
-
-                else:
-                    print(data)
-            # Close the heartbeat
-            running.cancel()
+                # Close the heartbeat
+                running.cancel()
