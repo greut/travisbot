@@ -15,3 +15,6 @@ discord_travisbot.egg-info
 
 # tox
 .tox
+
+# sphinx
+_build

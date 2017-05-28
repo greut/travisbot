@@ -4,12 +4,19 @@
 
 .. image:: https://travis-ci.org/greut/travisbot.svg?branch=master
    :target: https://travis-ci.org/greut/travisbot
+   :alt: Build Status
 
 .. image:: https://img.shields.io/pypi/dd/discord-travisbot.svg
    :target: https://pypi.python.org/pypi/discord-travisbot
+   :alt: PyPi Downloads
 
 .. image:: https://img.shields.io/github/stars/greut/travisbot.svg
    :target: https://github.com/greut/travisbot/stargazers
+   :alt: GitHub Stars
+
+.. image:: https://readthedocs.org/projects/travisbot/badge/?version=latest
+   :target: http://travisbot.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
 
 A bot for Discord. (Work in progress)
 
