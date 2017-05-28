@@ -11,7 +11,6 @@ from . import HOST, PORT, Bot, api, make_app
 async def main(token, queue):
     """Run main program."""
     response = await api("/gateway")
-    print(response)
     bot = Bot(response['url'], token, queue)
     await bot.run()
 

@@ -44,6 +44,10 @@ class Bot:
         self.get = get
         """Reading endpoint of the queue."""
 
+        # Metadata
+        self.user = None
+        self.guilds = {}
+
     async def identify(self):
         """Send the identify message performing the authentication."""
         await self.ws.send_json({
@@ -81,6 +85,21 @@ class Bot:
         return await api(f"/channels/{channel}/messages", "POST",
                          token=self.token,
                          json={"content": content})
+
+    async def on_ready(self, data):
+        """Handle the READY event."""
+        self.user = data['user']
+        print(f"connected as {self.user['username']}#{self.user['discriminator']}")
+
+    async def on_guild_create(self, data):
+        """Handle the GUILD_CREATE event."""
+        self.guilds[data['id']] = data
+        print(f"joined {data['name']}")
+
+    async def on_presence_update(self, data):
+        """Handle the PRESENCE_UPDATE event."""
+        # XXX update the guilds.presences list.
+        print(f"{data['user']['id']} is {data['status']}")
 
     async def run(self):
         """Run the bot."""
@@ -122,10 +141,16 @@ class Bot:
 
                     elif data["op"] == DISPATCH:
                         self.last_sequence = data['s']
-                        # Debug
-                        print(data['t'])
-                        print(data['d'])
-                        print('-' * 40)
+
+                        event = data['t'].lower()
+                        if hasattr(self, f'on_{event}'):
+                            method = getattr(self, f'on_{event}')
+                            asyncio.ensure_future(method(data['d']))
+                        else:
+                            # Debug
+                            print(data['t'])
+                            print(data['d'])
+                            print('-' * 40)
 
                     else:
                         print(data)
