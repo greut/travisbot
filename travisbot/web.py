@@ -23,7 +23,7 @@ async def notifications(request):
             certificate = await travis_certificate()
             request.app['config']['certificate'] = certificate
 
-        crypto.verify(certificate, signature, payload, 'sha1')
+        crypto.verify(certificate, signature, payload.encode('utf-8'), 'sha1')
         data = json.loads(payload)
         # enqueue the payload
         await request.app['config']['put'](data)

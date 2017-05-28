@@ -44,6 +44,9 @@ class Bot:
         self.get = get
         """Reading endpoint of the queue."""
 
+        self.channel_id = 309734242085109760
+        """Channel called #bots."""
+
         # Metadata
         self.user = None
         self.guilds = {}
@@ -75,16 +78,24 @@ class Bot:
         """Consume the queue and post messages in Discord."""
         while not fut.done():
             data = await self.get()
-            msg = f"{data['repository']['name']}: {data['status_message']}!"
-            # XXX this is quite hard coded.
-            print(msg)
-            asyncio.ensure_future(self.send_message(309734242085109760, msg))
 
-    async def send_message(self, channel, content):
+            asyncio.ensure_future(self.send_message(self.channel_id, {
+                "embed": {
+                    "title": f"{data['repository']['owner_name']}/"
+                             f"{data['repository']['name']} "
+                                f"{data['status_message']}",
+                    "type": "rich",
+                    "description": f"{data['author_name']} {data['type']} "
+                                    f"<{data['compare_url']}>",
+                    "url": data['build_url']
+                }
+            }))
+
+    async def send_message(self, channel, data):
         """Send a message into the given channel."""
         return await api(f"/channels/{channel}/messages", "POST",
                          token=self.token,
-                         json={"content": content})
+                         json=data)
 
     async def on_ready(self, data):
         """Handle the READY event."""
@@ -143,10 +154,10 @@ class Bot:
                         self.last_sequence = data['s']
 
                         event = data['t'].lower()
-                        if hasattr(self, f'on_{event}'):
+                        try:
                             method = getattr(self, f'on_{event}')
                             asyncio.ensure_future(method(data['d']))
-                        else:
+                        except AttributeError:
                             # Debug
                             print(data['t'])
                             print(data['d'])
