@@ -11,11 +11,11 @@ install:
 script:
   - tox
 
-notifications:
-  webhooks:
-    urls:
-      - https://9df2b529.ngrok.io/notifications
-    on_start: always
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://9df2b529.ngrok.io/notifications
+#    on_start: always
 
 deploy:
   provider: pypi
