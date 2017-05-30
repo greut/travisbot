@@ -68,7 +68,7 @@ class Bot:
             return f
         return decorate
 
-    async def identify(self):
+    async def _identify(self):
         """Send the identify message performing the authentication."""
         await self.ws.send_json({
             "op": self.IDENTIFY,
@@ -80,13 +80,15 @@ class Bot:
             }
         })
 
-    async def heartbeat(self, fut):
+    async def _heartbeat(self):
         """Send beats regularly to keep the ws connected."""
-        while not fut.done():
-            # For for the future or send the heartbeat
+        while not self.running.done():
+            # Wait for the future or send the heartbeat
             try:
-                # Do not cancel the fut in case of a timeout (shield).
-                await asyncio.wait_for(asyncio.shield(fut), self.interval)
+                # Do not cancel the global future in case of a timeout
+                # with shield.
+                await asyncio.wait_for(asyncio.shield(self.running),
+                                       self.interval)
             except asyncio.TimeoutError:
                 print("heartbeat", self.last_sequence)
                 await self.ws.send_json({
@@ -94,12 +96,14 @@ class Bot:
                     "d": self.last_sequence
                 })
 
-    async def consume(self, fut):
+    # XXX move this outside the bot class.
+
+    async def consume(self):
         """Consume the queue and post messages in Discord."""
-        while not fut.done():
+        while not self.running.done():
             task = asyncio.ensure_future(self.get())
             done, pending = await asyncio.wait(
-                [task, fut],
+                [task, self.running],
                 return_when=asyncio.FIRST_COMPLETED)
 
             if task in done:
@@ -126,7 +130,7 @@ class Bot:
                          token=self.token,
                          json=data)
 
-    async def receive(self):
+    async def _receive(self):
         """Read the WebSocket and handles the various cases."""
         msg = await self.ws.receive()
 
@@ -147,59 +151,63 @@ class Bot:
 
     async def run(self):
         """Run the bot."""
-        running = asyncio.Future()  # XXX a bit ugly, still. Gather?
+        self.running = asyncio.Future()  # XXX a bit ugly, still. Gather?
 
         with ClientSession() as session:
             url = f"{self.url}?v={self.API_VERSION}&encoding=json"
             async with session.ws_connect(url) as ws:
                 self.ws = ws
-                while not running.done():
+                while not self.running.done():
                     # Reading the message, easier to handle timeouts and such.
-                    data = await self.receive()
+                    data = await self._receive()
                     if not data:
-                        running.cancel()
+                        self.running.cancel()
                         break
 
-                    if data["op"] == self.HELLO:
-                        await self.identify()
-
-                        # Heartbeat (converted in seconds)
-                        self.interval = data['d']['heartbeat_interval'] / 1000
-                        self.futures.append(
-                            asyncio.ensure_future(self.heartbeat(running)))
-                        # Consumer
-                        self.futures.append(
-                            asyncio.ensure_future(self.consume(running)))
-
-                    elif data["op"] == self.HEARTBEAT_ACK:
-                        pass
-
-                    elif data["op"] == self.INVALID_SESSION:
-                        print('invalid session')
-                        running.cancel()
-
-                    elif data["op"] == self.DISPATCH:
-                        self.last_sequence = data['s']
-
-                        event = data['t'].lower()
-                        callback = self.events.get(event, None)
-                        if callback:
-                            self.futures.append(
-                                asyncio.ensure_future(callback(data['d'])))
-                        else:
-                            # Debug
-                            print(data['t'])
-                            print(data['d'])
-                            print('-' * 40)
-
-                    else:
-                        print(data)
+                    await self._handle(data)
 
                     # Cleanup
                     self.futures = [f for f in self.futures if not f.done()]
 
                 # Close the tasks
-                running.cancel()
+                self.running.cancel()
                 # Wait for them.
                 print("Bot is closing...")
                 await asyncio.gather(*self.futures)
+
+    async def _handle(self, data):
+        """Handle the message data."""
+        if data["op"] == self.HELLO:
+            await self._identify()
+
+            # Heartbeat (converted in seconds)
+            self.interval = data['d']['heartbeat_interval'] / 1000
+            self.futures.append(
+                asyncio.ensure_future(self._heartbeat()))
+            # Consumer
+            self.futures.append(
+                asyncio.ensure_future(self.consume()))
+
+        elif data["op"] == self.HEARTBEAT_ACK:
+            pass
+
+        elif data["op"] == self.INVALID_SESSION:
+            print('invalid session')
+            self.running.cancel()
+
+        elif data["op"] == self.DISPATCH:
+            self.last_sequence = data['s']
+
+            event = data['t'].lower()
+            callback = self.events.get(event, None)
+            if callback:
+                self.futures.append(
+                    asyncio.ensure_future(callback(data['d'])))
+            else:
+                # Debug
+                print(data['t'])
+                print(data['d'])
+                print('-' * 40)
+
+        else:
+            print(data)
