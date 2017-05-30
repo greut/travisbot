@@ -3,7 +3,8 @@ language: python
 cache: pip
 
 python:
-  - '3.6'
+  - "3.6"
+  - "nightly"
 
 install:
   - pip install tox tox-travis
@@ -19,7 +20,7 @@ script:
 
 deploy:
   provider: pypi
-  distributions: "bdist_wheel"
+  distributions: "sdist bdist_wheel"
   user: greut
   password:
     secure: xxRYSyMeaiJmDUUDZgeqvBx8xC2Q3Rh+gG7XDv4uJWjj/WgX84iXIlaxt+N7I9LRP30xb7Y6cg2ydlQ26hZVNPwSQf7EHXD30SaKL5M3bVhk2ku6SurA+1OCpQK9G7CiLcj6eVA8pkcsgpgQTxmAK2kzijyFJ17LoBHHTvCMBjIgnb75JGIy1zMBX1W1zSWH+rEZKEasDWVR5A/2ELQ8QUD7j+ce25y/IsClyL3uHDK3cylfgzx1yipFnrKb/4gf70rhSYXaC/1EWG+QOGsiK7W4EPwpN00L0X6nLjEx5HeJWFbl64UIgK7HglhodTZJh0Zjvllue+aVhsb2UStwHYTBkh3A6YuvfCYJlGLJuyzRyemsF9gKJ1ioIlSl60h+W+LOIBq+ST8TWzfWVX33j5cShAxc/oF7+CHgwJgtnq26s2A1JWtB1bZwIcUKWsVDutt8tj/qqJFaxsm4/GBytqoKjtaptFOGxNyQUjpTYDcvXAi5oUwA2bdpv78rfUle9uNe1pwJoLGxtNifI7+DXDM1WSuq8BP0WWWvx3lHM8U9ga+nHwrDnMhH9HnZAhtayu0lTtToPOc6TLsRLuJUH0LN4Rhxd4fAJP1w8qJuXeSfNnGvE8helvWwh2LX+Y/LOhzlGCpfkjSFzDF6m7emgvjaKw8dMEG1yfowuf3n2+w=
