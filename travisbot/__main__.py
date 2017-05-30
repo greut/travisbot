@@ -12,6 +12,26 @@ async def main(token, queue):
     """Run main program."""
     response = await api("/gateway")
     bot = Bot(response['url'], token, queue)
+
+    @bot.event()
+    async def on_ready(data):
+        """Handle the READY event."""
+        bot.user = data['user']
+        print(f"connected as {bot.user['username']}#{bot.user['discriminator']}")
+
+    @bot.event()
+    async def on_guild_create(data):
+        """Handle the GUILD_CREATE event."""
+        bot.guilds[data['id']] = data
+        print(f"joined {data['name']}")
+
+    @bot.event()
+    async def on_presence_update(data):
+        """Handle the PRESENCE_UPDATE event."""
+        # XXX update the guilds.presences list.
+        print(f"{data['user']['id']} is {data['status']}")
+
+
     await bot.run()
 
 
