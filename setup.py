@@ -40,6 +40,6 @@ setup(
     extras_require={
         'fast': ('cchardet', 'aiodns'),  # making it faster (recommended)
         'qa': ('flake8', 'isort', 'pycodestyle', 'pydocstyle', 'rstcheck'),
-        'docs': ('Sphinx>=1.6.0',)
+        'docs': ('Sphinx>=1.6.0', 'sphinxcontrib-trio')
     }
 )
