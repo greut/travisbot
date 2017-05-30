@@ -17,7 +17,8 @@ async def main(token, queue):
     async def on_ready(data):
         """Handle the READY event."""
         bot.user = data['user']
-        print(f"connected as {bot.user['username']}#{bot.user['discriminator']}")
+        print(f"connected as {bot.user['username']}"
+              f"#{bot.user['discriminator']}")
 
     @bot.event()
     async def on_guild_create(data):
@@ -31,6 +32,11 @@ async def main(token, queue):
         # XXX update the guilds.presences list.
         print(f"{data['user']['id']} is {data['status']}")
 
+    # Other events:
+    # on_typing_start
+    # on_message_create
+    # on_message_update
+    # ...
 
     await bot.run()
 

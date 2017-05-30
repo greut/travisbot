@@ -42,7 +42,12 @@ async def fake(request):
     """Submit a fake notification."""
     await request.app['config']['put']({
         'status_message': 'test',
+        'author_name': 'test',
+        'type': 'test',
+        'compare_url': 'http://example.org/',
+        'build_url': 'http://example.org/',
         'repository': {
+            'owner_name': 'test',
             'name': 'travisbot'
         }
     })
