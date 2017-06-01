@@ -41,5 +41,14 @@ setup(
         'fast': ('cchardet', 'aiodns'),  # making it faster (recommended)
         'qa': ('flake8', 'isort', 'pycodestyle', 'pydocstyle', 'rstcheck'),
         'docs': ('Sphinx>=1.6.0', 'sphinxcontrib-trio')
-    }
+    },
+    setup_requires=(
+        'pytest-runner',
+    ),
+    tests_require=(
+        'pytest',
+        'pytest-aiohttp',
+        'pytest-asyncio',
+        'pytest-cov',
+    )
 )

@@ -68,9 +68,9 @@ async def travis_certificate():
     return certificate
 
 
-def make_app(put):
+def make_app(put, loop=None):
     """Make the web application for you."""
-    app = web.Application()
+    app = web.Application(loop=loop)
     app['config'] = {
         'put': put,
         'certificate': None
