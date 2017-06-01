@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import sys
+import warnings
 
 from . import HOST, PORT, Bot, api, make_app
 
@@ -57,6 +58,8 @@ if __name__ == "__main__":
     if debug:
         loop.set_debug(True)
         logging.getLogger('asyncio').setLevel(logging.DEBUG)
+        logging.getLogger('asyncio').addHandler(logging.StreamHandler())
+        warnings.simplefilter('always', ResourceWarning)
     handler = app.make_handler(loop=loop)
     loop.run_until_complete(app.startup())
 
