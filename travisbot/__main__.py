@@ -17,20 +17,20 @@ async def main(token, queue):
     async def on_ready(data):
         """Handle the READY event."""
         bot.user = data['user']
-        print(f"connected as {bot.user['username']}"
-              f"#{bot.user['discriminator']}")
+        print(("connected as {user[username]}"
+               "#{user[discriminator]}").format(user=bot.user))
 
     @bot.event()
     async def on_guild_create(data):
         """Handle the GUILD_CREATE event."""
         bot.guilds[data['id']] = data
-        print(f"joined {data['name']}")
+        print("joined {data[name]}".format(data=data))
 
     @bot.event()
     async def on_presence_update(data):
         """Handle the PRESENCE_UPDATE event."""
         # XXX update the guilds.presences list.
-        print(f"{data['user']['id']} is {data['status']}")
+        print("{data[user][id]} is {data[status]}".format(data=data))
 
     # Other events:
     # on_typing_start
@@ -63,7 +63,8 @@ if __name__ == "__main__":
     server = loop.create_server(handler, host=HOST, port=PORT)
     try:
         srv = loop.run_until_complete(server)
-        print(f"Listening on {HOST}:{PORT}... Ctrl-C to close.")
+        print("Listening on {HOST}:{PORT}... Ctrl-C to close."
+              .format(HOST=HOST, PORT=PORT))
         loop.run_until_complete(main(token, queue.get))
     except KeyboardInterrupt:
         pass

@@ -8,6 +8,5 @@ from .conf import URL, HOST, PORT, TRAVIS_CONFIG_URL  # noqa
 from .web import make_app  # noqa
 
 
-if sys.version_info < (3, 6):
-    raise ImportError("travisbot requires Python 3.6+ because f-str/asyncio. "
-                      "<3")
+if sys.version_info < (3, 5):
+    raise ImportError("travisbot requires Python 3.5+ because asyncio. <3")

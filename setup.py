@@ -11,8 +11,8 @@ with open(path.join(here, 'README.rst'), 'r', encoding='utf-8') as f:
 
 setup(
     name='discord-travisbot',
-    version='0.0.1.dev20170528',  # see PEP-0440
-    python_requires='>=3.6',
+    version='0.0.1.dev20170601',  # see PEP-0440
+    python_requires='>=3.5',
     author='Yoan Blanc',
     author_email='yoan@dosimple.ch',
     url='https://github.com/greut/travisbot',

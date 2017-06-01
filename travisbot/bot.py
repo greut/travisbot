@@ -3,6 +3,7 @@
 import asyncio
 import json
 import zlib
+from urllib.parse import urlencode
 
 from aiohttp import ClientSession, WSMsgType
 
@@ -110,12 +111,14 @@ class Bot:
                 data = task.result()
                 f = asyncio.ensure_future(self.send_message(self.channel_id, {
                     "embed": {
-                        "title": f"{data['repository']['owner_name']}/"
-                                 f"{data['repository']['name']} "
-                                 f"{data['status_message']}",
+                        "title": ("{data[repository][owner_name]}/"
+                                  "{data[repository][name]} "
+                                  "{data[status_message]}"
+                                  ).format(data=data),
                         "type": "rich",
-                        "description": f"{data['author_name']} {data['type']} "
-                                       f"<{data['compare_url']}>",
+                        "description": ("{data[author_name]} {data[type]} "
+                                        "<{data[compare_url]}>"
+                                        ).format(data=data),
                         "url": data['build_url']
                     }
                 }))
@@ -126,7 +129,7 @@ class Bot:
 
     async def send_message(self, channel, data):
         """Send a message into the given channel."""
-        return await api(f"/channels/{channel}/messages", "POST",
+        return await api("/channels/{}/messages".format(channel), "POST",
                          token=self.token,
                          json=data)
 
@@ -154,7 +157,8 @@ class Bot:
         self.running = asyncio.Future()  # XXX a bit ugly, still. Gather?
 
         with ClientSession() as session:
-            url = f"{self.url}?v={self.API_VERSION}&encoding=json"
+            url = self.url + "?"
+            url += urlencode({"v": self.API_VERSION, "encoding": json})
             async with session.ws_connect(url) as ws:
                 self.ws = ws
                 while not self.running.done():

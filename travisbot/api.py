@@ -14,12 +14,12 @@ async def api(path, method="GET", token=None, **kwargs):
     }
 
     if token:
-        defaults["headers"]["Authorization"] = f"Bot {token}"
+        defaults["headers"]["Authorization"] = "Bot {0}".format(token)
 
     kwargs = dict(defaults, **kwargs)
 
     with ClientSession() as session:
-        url = f"{URL}{path}"
+        url = "{URL}{path}".format(URL=URL, path=path)
         async with session.request(method, url, **kwargs) as response:
             assert 200 == response.status, response.reason
             return await response.json()
