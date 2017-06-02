@@ -10,6 +10,18 @@ from aiohttp import ClientSession, WSMsgType
 from . import api
 
 
+def guild_required(coro):
+    """Wait the guilds to appear before allowing the coroutine to start."""
+    async def wrapped(self, *args, **kwargs):
+        while not self.guilds:
+            print("Not connected... waiting.")
+            # ugly
+            await asyncio.sleep(1)
+
+        return await coro(self, *args, **kwargs)
+    return wrapped
+
+
 class Bot:
     """The bot."""
 
@@ -99,6 +111,7 @@ class Bot:
 
     # XXX move this outside the bot class.
 
+    @guild_required
     async def consume(self):
         """Consume the queue and post messages in Discord."""
         while not self.running.done():
@@ -127,6 +140,7 @@ class Bot:
                 task.cancel()
                 break
 
+    @guild_required
     async def send_message(self, channel, data):
         """Send a message into the given channel."""
         return await api("/channels/{}/messages".format(channel), "POST",
