@@ -20,6 +20,7 @@ class Bot:
     DISPATCH = 0
     HEARTBEAT = 1
     IDENTIFY = 2
+    STATUS_UPDATE = 3
     RESUME = 6
     INVALID_SESSION = 9
     HELLO = 10
@@ -151,6 +152,18 @@ class Bot:
                          token=self.token,
                          json=data)
 
+    async def update_status(self, status):
+        """Update the game status."""
+        return await self.ws.send_json({
+            "op": self.STATUS_UPDATE,
+            "d": {
+                "idle_since": None,
+                "game": {
+                    "name": status
+                }
+            }
+        })
+
     async def _receive(self):
         """Read the WebSocket and handles the various cases."""
         msg = await self.ws.receive()
@@ -229,6 +242,9 @@ class Bot:
             event = data['t'].lower()
             if event == 'ready':
                 self.session_id = data['d']['session_id']
+                self.futures.append(
+                    asyncio.ensure_future(
+                        self.update_status("greut/travisbot")))
 
             callback = self.events.get(event, None)
             if callback:
