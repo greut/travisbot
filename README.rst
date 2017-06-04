@@ -28,7 +28,7 @@ To setup and run the basic steps of the bot.
 Requirements
 ------------
 
-- `Python 3.6 <https://www.python.org/>`_
+- `Python 3.5+ <https://www.python.org/>`_
 - `ngrok <https://ngrok.com/>`_
 
 Installation
