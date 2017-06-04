@@ -3,6 +3,7 @@
 import asyncio
 import json
 import zlib
+from concurrent.futures import CancelledError
 from urllib.parse import urlencode
 
 from aiohttp import ClientSession, WSMsgType
@@ -19,11 +20,12 @@ class Bot:
     DISPATCH = 0
     HEARTBEAT = 1
     IDENTIFY = 2
+    RESUME = 6
     INVALID_SESSION = 9
     HELLO = 10
     HEARTBEAT_ACK = 11
 
-    def __init__(self, url, token, get):
+    def __init__(self, url, token, get, running):
         """Init the bot.
 
         :param url: The Gateway URL (WebSocket)
@@ -31,6 +33,9 @@ class Bot:
         :param get: The Queue reader side.
         """
         self.url = url
+        self.running = running
+
+        self.ws_running = None
 
         self.last_sequence = None
         """The sequence number of messages."""
@@ -51,6 +56,7 @@ class Bot:
         """Channel called #bots."""
 
         # Metadata
+        self.session_id = None
         self.user = None
         self.guilds = {}
         self.events = {}
@@ -70,25 +76,37 @@ class Bot:
         return decorate
 
     async def _identify(self):
-        """Send the identify message performing the authentication."""
-        await self.ws.send_json({
-            "op": self.IDENTIFY,
-            "d": {
-                "token": self.token,
-                "properties": {},
-                "compress": True,
-                "large_threshold": 250
+        """Send the identify/resume message performing the authentication."""
+        if not self.session_id:
+            msg = {
+                "op": self.IDENTIFY,
+                "d": {
+                    "token": self.token,
+                    "properties": {},
+                    "compress": True,
+                    "large_threshold": 250
+                }
             }
-        })
+        else:
+            msg = {
+                "op": self.RESUME,
+                "d": {
+                    "token": self.token,
+                    "session_id": self.session_id,
+                    "seq": self.last_sequence
+                }
+            }
+
+        await self.ws.send_json(msg)
 
     async def _heartbeat(self):
         """Send beats regularly to keep the ws connected."""
-        while not self.running.done():
+        while not self.ws_running.done():
             # Wait for the future or send the heartbeat
             try:
                 # Do not cancel the global future in case of a timeout
                 # with shield.
-                await asyncio.wait_for(asyncio.shield(self.running),
+                await asyncio.wait_for(asyncio.shield(self.ws_running),
                                        self.interval)
             except asyncio.TimeoutError:
                 print("heartbeat", self.last_sequence)
@@ -101,10 +119,10 @@ class Bot:
 
     async def consume(self):
         """Consume the queue and post messages in Discord."""
-        while not self.running.done():
+        while not self.ws_running.done():
             task = asyncio.ensure_future(self.get())
             done, pending = await asyncio.wait(
-                [task, self.running],
+                [task, self.ws_running],
                 return_when=asyncio.FIRST_COMPLETED)
 
             if task in done:
@@ -154,30 +172,37 @@ class Bot:
 
     async def run(self):
         """Run the bot."""
-        self.running = asyncio.Future()  # XXX a bit ugly, still. Gather?
-
         with ClientSession() as session:
             url = self.url + "?"
             url += urlencode({"v": self.API_VERSION, "encoding": json})
-            async with session.ws_connect(url) as ws:
-                self.ws = ws
-                while not self.running.done():
-                    # Reading the message, easier to handle timeouts and such.
-                    data = await self._receive()
-                    if not data:
-                        self.running.cancel()
-                        break
+            while not self.running.done():
+                print("Bot is connecting...")
+                self.ws_running = asyncio.Future()
+                async with session.ws_connect(url) as ws:
+                    self.ws = ws
+                    while not self.running.done():
+                        # Reading the message.
+                        data = await self._receive()
+                        if not data:
+                            break
 
-                    await self._handle(data)
+                        await self._handle(data)
 
-                    # Cleanup
-                    self.futures = [f for f in self.futures if not f.done()]
+                        # Cleanup
+                        self.futures = [f
+                                        for f in self.futures if not f.done()]
 
-                # Close the tasks
-                self.running.cancel()
-                # Wait for them.
-                print("Bot is closing...")
-                await asyncio.gather(*self.futures)
+                    # Close the tasks
+                    # Wait for them.
+                    print("Bot is closing...")
+                    self.ws_running.cancel()
+                    while self.futures:
+                        try:
+                            await asyncio.gather(*self.futures)
+                        except CancelledError:
+                            pass
+                        self.futures = [f
+                                        for f in self.futures if not f.done()]
 
     async def _handle(self, data):
         """Handle the message data."""
@@ -197,12 +222,14 @@ class Bot:
 
         elif data["op"] == self.INVALID_SESSION:
             print('invalid session')
-            self.running.cancel()
 
         elif data["op"] == self.DISPATCH:
             self.last_sequence = data['s']
 
             event = data['t'].lower()
+            if event == 'ready':
+                self.session_id = data['d']['session_id']
+
             callback = self.events.get(event, None)
             if callback:
                 self.futures.append(

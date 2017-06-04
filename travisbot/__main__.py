@@ -9,10 +9,10 @@ import warnings
 from . import HOST, PORT, Bot, api, make_app
 
 
-async def main(token, queue):
+async def main(token, queue, running):
     """Run main program."""
     response = await api("/gateway")
-    bot = Bot(response['url'], token, queue)
+    bot = Bot(response['url'], token, queue, running)
 
     @bot.event()
     async def on_ready(data):
@@ -68,9 +68,15 @@ if __name__ == "__main__":
         srv = loop.run_until_complete(server)
         print("Listening on {HOST}:{PORT}... Ctrl-C to close."
               .format(HOST=HOST, PORT=PORT))
-        loop.run_until_complete(main(token, queue.get))
-    except KeyboardInterrupt:
-        pass
 
-    srv.close()
-    loop.close()
+        running = asyncio.Future()
+        task = asyncio.ensure_future(main(token, queue.get, running))
+        loop.run_until_complete(running)
+    except KeyboardInterrupt:
+        print("Closing...")
+        running.cancel()
+        loop.run_forever()
+        running.exception()
+    finally:
+        srv.close()
+        loop.close()
